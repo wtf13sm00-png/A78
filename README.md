@@ -1,2 +1,800 @@
-# A78
-奶蛙家族
+<!DOCTYPE html>
+<html lang="zh-Hant" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>奶蛙生態圖鑑 | Naiwa Frog Encyclopedia</title>
+
+  <!-- PWA & Mobile App 原生 Meta 標籤 -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#FFF8E1" id="theme-color-meta" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="奶蛙生態圖鑑" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cream: {
+              50: '#FFFDF7',
+              100: '#FFF8E1',
+              200: '#FFECB3',
+              300: '#FFE082',
+              400: '#FFD54F',
+              500: '#FFCA28',
+            },
+            forest: {
+              400: '#66BB6A',
+              500: '#4CAF50',
+              600: '#43A047',
+              700: '#2E7D32',
+            },
+            cocoa: {
+              800: '#26211B',
+              900: '#1A1612',
+              950: '#120F0C'
+            }
+          },
+          fontFamily: {
+            sans: ['"Noto Sans TC"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* 原生 Mobile App 觸控與捲動防呆規範 */
+    html, body {
+      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: pan-y;
+    }
+
+    /* 隱藏捲軸但保留平滑捲動 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Soft Claymorphism 軟萌黏土風卡片質感 */
+    .clay-card {
+      box-shadow: 
+        0 14px 32px -8px rgba(255, 193, 7, 0.18),
+        0 4px 12px -2px rgba(0, 0, 0, 0.04),
+        inset 0 2px 4px rgba(255, 255, 255, 0.9);
+    }
+    .dark .clay-card {
+      box-shadow: 
+        0 16px 36px -8px rgba(0, 0, 0, 0.55),
+        0 4px 12px -2px rgba(0, 0, 0, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    }
+
+    /* 果凍 Q 彈動畫 (Spring Jelly Bounce) */
+    @keyframes jellyBounce {
+      0% { transform: scale(1, 1); }
+      25% { transform: scale(1.12, 0.88); }
+      45% { transform: scale(0.92, 1.08); }
+      65% { transform: scale(1.05, 0.96); }
+      82% { transform: scale(0.98, 1.02); }
+      100% { transform: scale(1, 1); }
+    }
+    .animate-jelly {
+      animation: jellyBounce 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* 內容切換微幅淡入滑動 */
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .animate-stage-enter {
+      animation: fadeSlideUp 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* 骨架屏微光閃爍 */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton-shimmer {
+      background: linear-gradient(90deg, rgba(255,213,79,0.12) 25%, rgba(255,213,79,0.28) 50%, rgba(255,213,79,0.12) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite linear;
+    }
+  </style>
+</head>
+
+<body class="bg-cream-100 text-stone-800 dark:bg-cocoa-950 dark:text-stone-100 transition-colors duration-300 min-h-[100dvh] flex flex-col justify-between overflow-x-hidden">
+
+  <!-- 1. 頂部固定導覽列 (App Bar) -->
+  <header class="sticky top-0 z-30 bg-cream-100/85 dark:bg-cocoa-950/85 backdrop-blur-md border-b border-amber-200/50 dark:border-stone-800/80 pt-[env(safe-area-inset-top)]">
+    <div class="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-cream-400 flex items-center justify-center shadow-sm">
+          <!-- 迷你綠眼圖標 -->
+          <div class="flex gap-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-forest-500 flex items-center justify-center">
+              <span class="w-1 h-1 rounded-full bg-stone-900"></span>
+            </span>
+            <span class="w-2.5 h-2.5 rounded-full bg-forest-500 flex items-center justify-center">
+              <span class="w-1 h-1 rounded-full bg-stone-900"></span>
+            </span>
+          </div>
+        </div>
+        <h1 class="text-lg font-black tracking-tight text-stone-800 dark:text-amber-50">
+          奶蛙生態圖鑑
+        </h1>
+      </div>
+
+      <!-- 右側功能按鈕群：深色模式切換 & 世界觀資訊 -->
+      <div class="flex items-center gap-1.5">
+        <button id="theme-toggle-btn" aria-label="切換深淺色模式"
+          class="w-9 h-9 rounded-full bg-white/80 dark:bg-cocoa-800 flex items-center justify-center text-stone-600 dark:text-amber-300 shadow-sm active:scale-90 transition-transform">
+          <!-- Sun / Moon Icon via JS -->
+          <svg id="icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+          </svg>
+          <svg id="icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <button id="info-modal-btn" aria-label="關於奶蛙世界觀"
+          class="w-9 h-9 rounded-full bg-white/80 dark:bg-cocoa-800 flex items-center justify-center text-forest-600 dark:text-forest-400 shadow-sm active:scale-90 transition-transform">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 16v-4m0-4h.01"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主內容區塊 (支援左右滑動手勢 Touch Swipe) -->
+  <main id="swipe-area" class="flex-1 max-w-md w-full mx-auto px-4 pt-3 pb-6 flex flex-col gap-3.5">
+
+    <!-- PWA 安裝引導橫幅 (支援 beforeinstallprompt 時顯示) -->
+    <div id="pwa-install-banner" class="hidden items-center justify-between gap-3 px-3.5 py-2.5 rounded-2xl bg-forest-500 text-white shadow-md">
+      <div class="flex items-center gap-2.5 text-xs">
+        <span class="text-base">📲</span>
+        <div>
+          <p class="font-bold">安裝「奶蛙生態圖鑑」App</p>
+          <p class="text-white/85 text-[11px]">加入主畫面，隨時隨地離線翻閱圖鑑</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="pwa-install-btn" class="px-3 py-1.5 rounded-xl bg-white text-forest-700 font-bold text-xs active:scale-95 transition-transform">
+          安裝
+        </button>
+        <button id="pwa-dismiss-btn" aria-label="關閉安裝提示" class="p-1 text-white/80 hover:text-white">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. 主題副標題橫幅 -->
+    <div class="flex items-center justify-between">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-cream-300/80 to-amber-200/60 dark:from-amber-500/20 dark:to-amber-600/10 border border-amber-300/60 dark:border-amber-500/30">
+        <span class="w-2 h-2 rounded-full bg-forest-500 animate-pulse"></span>
+        <span class="text-xs font-bold tracking-wider text-amber-900 dark:text-amber-300">奶蛙型態演變</span>
+      </div>
+      <span id="stage-counter-badge" class="text-xs font-bold text-stone-400 dark:text-stone-500">
+        STAGE 01 / 04
+      </span>
+    </div>
+
+    <!-- 3. 四階段分段控制器 (Segmented Control / Tabs) -->
+    <nav aria-label="奶蛙型態切換" class="relative grid grid-cols-4 p-1 rounded-2xl bg-amber-200/55 dark:bg-cocoa-800/90 border border-amber-200/80 dark:border-stone-700/70">
+      <!-- 滑動高亮膠囊背景 -->
+      <div id="tab-indicator"
+        class="absolute top-1 bottom-1 left-1 w-[calc(25%-4px)] rounded-xl bg-white dark:bg-stone-700 shadow-sm transition-transform duration-300 ease-out pointer-events-none">
+      </div>
+
+      <button data-stage="0" class="stage-tab relative z-10 py-2 text-xs font-bold text-center rounded-xl transition-colors duration-200 text-stone-900 dark:text-white">
+        蛋蛋型態
+      </button>
+      <button data-stage="1" class="stage-tab relative z-10 py-2 text-xs font-bold text-center rounded-xl transition-colors duration-200 text-stone-500 dark:text-stone-400">
+        幼幼型態
+      </button>
+      <button data-stage="2" class="stage-tab relative z-10 py-2 text-xs font-bold text-center rounded-xl transition-colors duration-200 text-stone-500 dark:text-stone-400">
+        巨獸型態
+      </button>
+      <button data-stage="3" class="stage-tab relative z-10 py-2 text-xs font-bold text-center rounded-xl transition-colors duration-200 text-stone-500 dark:text-stone-400">
+        螺旋型態
+      </button>
+    </nav>
+
+    <!-- 4. 核心視覺展示卡片 (Hero Showcase Card) -->
+    <section class="clay-card relative bg-white dark:bg-cocoa-900 rounded-[28px] p-5 border border-amber-100 dark:border-stone-800 flex flex-col items-center justify-center overflow-hidden">
+      <!-- 背景柔和光暈 -->
+      <div class="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-cream-200/60 dark:bg-amber-500/10 blur-2xl pointer-events-none"></div>
+      <div class="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-forest-400/15 dark:bg-forest-500/10 blur-2xl pointer-events-none"></div>
+
+      <!-- 階段標籤與學名 -->
+      <div class="w-full flex items-center justify-between mb-2 z-10">
+        <span id="stage-tag" class="px-2.5 py-0.5 rounded-lg bg-forest-500/15 text-forest-700 dark:text-forest-400 text-[11px] font-bold">
+          初期萌態・無四肢
+        </span>
+        <span id="stage-latin" class="text-[11px] italic font-medium text-stone-400 dark:text-stone-500">
+          Naiwa ovum
+        </span>
+      </div>
+
+      <!-- 圖片互動容器 (點擊觸發果凍縮放與小彩蛋) -->
+      <div id="frog-interactive-box"
+        class="relative w-52 h-52 sm:w-56 sm:h-56 my-1 rounded-3xl flex items-center justify-center cursor-pointer select-none">
+        
+        <!-- 載入骨架屏 Skeleton -->
+        <div id="image-skeleton" class="absolute inset-4 rounded-3xl skeleton-shimmer"></div>
+
+        <!-- 實體圖片 (優先載入 stage1.jpg ~ stage4.jpg，載入失敗自動切換高質感向量插畫) -->
+        <img id="frog-image" src="./stage1.jpg" alt="奶蛙型態圖片"
+          class="w-full h-full object-contain rounded-2xl opacity-0 transition-opacity duration-300 z-10 drop-shadow-md" />
+
+        <!-- 備用高質感 SVG 插畫容器 -->
+        <div id="frog-svg-fallback" class="hidden w-full h-full items-center justify-center z-10 drop-shadow-md"></div>
+
+        <!-- 點擊彩蛋氣泡提示 -->
+        <div id="easter-egg-toast"
+          class="pointer-events-none opacity-0 scale-90 transition-all duration-300 absolute -top-2 z-20 px-3.5 py-1.5 rounded-full bg-stone-800/90 dark:bg-cream-400 text-white dark:text-stone-900 text-xs font-bold shadow-lg whitespace-nowrap">
+          噗滋！軟綿綿的～
+        </div>
+      </div>
+
+      <!-- 互動提示微字 -->
+      <p class="text-[11px] text-stone-400 dark:text-stone-500 mt-1 flex items-center gap-1">
+        <span>👆 點擊奶蛙戳戳看</span>
+        <span>•</span>
+        <span>👈 左右滑動切換 👉</span>
+      </p>
+    </section>
+
+    <!-- 5. 生態與特徵說明區 (Info Card) -->
+    <section id="info-card" class="clay-card bg-white dark:bg-cocoa-900 rounded-[28px] p-5 border border-amber-100 dark:border-stone-800 space-y-4">
+      <div class="flex items-baseline justify-between border-b border-amber-100 dark:border-stone-800 pb-3">
+        <div>
+          <h2 id="stage-title" class="text-xl font-black text-stone-800 dark:text-amber-50">
+            階段一：蛋蛋型態
+          </h2>
+          <p id="stage-subtitle" class="text-xs font-medium text-amber-600 dark:text-amber-400 mt-0.5">
+            圓潤無肢的初生微光球體
+          </p>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] uppercase tracking-wider text-stone-400 block">體長指標</span>
+          <span id="stage-size" class="text-xs font-bold text-forest-600 dark:text-forest-400">約 12–15 cm</span>
+        </div>
+      </div>
+
+      <!-- 三大科普欄位 -->
+      <div class="space-y-3.5 text-[14.5px] leading-[1.7] text-stone-600 dark:text-stone-300">
+        <div>
+          <h3 class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 bg-cream-200/70 dark:bg-amber-500/15 px-2.5 py-0.5 rounded-md mb-1">
+            <span>🔍</span> 型態特徵
+          </h3>
+          <p id="desc-morphology"></p>
+        </div>
+
+        <div>
+          <h3 class="inline-flex items-center gap-1.5 text-xs font-bold text-forest-700 dark:text-forest-300 bg-forest-500/15 px-2.5 py-0.5 rounded-md mb-1">
+            <span>🌿</span> 習性與性格
+          </h3>
+          <p id="desc-behavior"></p>
+        </div>
+
+        <div>
+          <h3 class="inline-flex items-center gap-1.5 text-xs font-bold text-sky-800 dark:text-sky-300 bg-sky-500/15 px-2.5 py-0.5 rounded-md mb-1">
+            <span>✨</span> 演變說明
+          </h3>
+          <p id="desc-evolution"></p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 底部狀態列 / 單手快速導覽進度條 -->
+  <footer class="sticky bottom-0 z-20 bg-cream-100/90 dark:bg-cocoa-950/90 backdrop-blur-md border-t border-amber-200/50 dark:border-stone-800/80 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 px-4">
+    <div class="max-w-md mx-auto flex items-center justify-between gap-3">
+      <button id="prev-btn"
+        class="flex items-center gap-1 px-3.5 py-2 rounded-2xl bg-white dark:bg-cocoa-800 text-stone-700 dark:text-stone-200 text-xs font-bold shadow-sm border border-amber-200/60 dark:border-stone-700 active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        <span>上一個</span>
+      </button>
+
+      <!-- 圓點進度指示器 (Pagination Dots) -->
+      <div id="pagination-dots" class="flex items-center gap-2" role="tablist" aria-label="階段頁碼指示">
+        <button data-dot="0" aria-label="第 1 階段" class="h-2.5 w-6 rounded-full bg-forest-500 transition-all duration-300"></button>
+        <button data-dot="1" aria-label="第 2 階段" class="h-2.5 w-2.5 rounded-full bg-amber-300 dark:bg-stone-700 transition-all duration-300"></button>
+        <button data-dot="2" aria-label="第 3 階段" class="h-2.5 w-2.5 rounded-full bg-amber-300 dark:bg-stone-700 transition-all duration-300"></button>
+        <button data-dot="3" aria-label="第 4 階段" class="h-2.5 w-2.5 rounded-full bg-amber-300 dark:bg-stone-700 transition-all duration-300"></button>
+      </div>
+
+      <button id="next-btn"
+        class="flex items-center gap-1 px-3.5 py-2 rounded-2xl bg-forest-500 text-white text-xs font-bold shadow-sm active:scale-95 disabled:opacity-40 disabled:pointer-events-none transition-all">
+        <span>下一個</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- 關於「奶蛙」世界觀彈窗 (Modal) -->
+  <div id="about-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-stone-900/50 backdrop-blur-sm">
+    <div class="bg-white dark:bg-cocoa-900 rounded-3xl max-w-sm w-full p-6 border border-amber-200 dark:border-stone-700 shadow-2xl space-y-4 transform transition-all">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🐸</span>
+          <h3 class="text-lg font-black text-stone-800 dark:text-amber-50">關於奶蛙生態系</h3>
+        </div>
+        <button id="close-modal-btn" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-500 hover:text-stone-800">
+          ✕
+        </button>
+      </div>
+
+      <div class="text-sm leading-relaxed text-stone-600 dark:text-stone-300 space-y-2.5">
+        <p>
+          <strong>奶蛙（學名：<em>Naiwa lactis</em>）</strong>是棲息於晨霧濕地與香草草甸的神秘兩棲擬態生物。牠們的表皮富含天然乳脂蛋白，不僅散發淡淡的卡士達甜香，更賦予身軀如麻糬般的高度延展性。
+        </p>
+        <p>
+          不同於一般蛙類的線性變態，奶蛙會隨著環境溫濕度與攝取的晨露養分，在<strong>「蛋蛋、幼幼、巨獸、螺旋」</strong>四種型態之間進行奇妙的形態演變。
+        </p>
+      </div>
+
+      <div class="pt-2">
+        <button id="confirm-modal-btn" class="w-full py-2.5 rounded-2xl bg-cream-400 hover:bg-cream-500 text-stone-900 font-bold text-sm transition-colors">
+          繼續探索圖鑑
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 核心資料與互動腳本 -->
+  <script>
+    // 四階段奶蛙完整圖鑑資料庫
+    const FROG_STAGES = [
+      {
+        id: 0,
+        tabName: '蛋蛋型態',
+        title: '階段一：蛋蛋型態',
+        subtitle: '圓潤無肢的初生微光球體',
+        tag: '初期萌態・無四肢',
+        latin: 'Naiwa ovum',
+        size: '約 12–15 cm',
+        image: './stage1.jpg',
+        easterEggs: [
+          '噗滋！像剛出爐的布丁一樣 Q 彈～',
+          '咕嚕咕嚕～正在吸收晨露能量！',
+          '沒有手腳也能滾得很快喔！'
+        ],
+        morphology: '通體呈現溫潤飽滿的蛋黃色澤，外型宛如一顆光滑無瑕的橢圓形水煮蛋，完全尚未分化出四肢與軀幹界線。正面鑲嵌著一對清澈明亮的森林綠大眼睛，搭配微微上揚的淺褐色小嘴，表皮覆蓋著一層柔滑的天然保濕薄膜。',
+        behavior: '性格溫馴且極度嗜睡，平時喜歡成群依偎在柔軟的苔蘚或陽光灑落的草窩中靜止不動。當感受到微風吹拂或周遭震動時，會透過改變體內重心進行不倒翁式的左右輕晃，藉此表達愉悅與好奇。',
+        evolution: '此階段屬於奶蛙生命週期的「蓄能萌芽期」。牠們透過表皮直接吸收清晨露水與空氣中的微光養分，當體內累積足夠的乳脂能量後，表皮張力會逐漸鬆動，準備向外萌發出靈活的四肢。',
+        svgFallback: `
+          <svg viewBox="0 0 240 240" class="w-full h-full">
+            <defs>
+              <radialGradient id="eggGrad" cx="40%" cy="30%" r="70%">
+                <stop offset="0%" stop-color="#FFE57F"/>
+                <stop offset="65%" stop-color="#FFD54F"/>
+                <stop offset="100%" stop-color="#FBC02D"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="120" cy="212" rx="52" ry="10" fill="rgba(0,0,0,0.08)"/>
+            <path d="M120 32 C168 32, 192 95, 192 148 C192 192, 162 210, 120 210 C78 210, 48 192, 48 148 C48 95, 72 32, 120 32 Z" fill="url(#eggGrad)"/>
+            <!-- 綠眼睛 -->
+            <circle cx="92" cy="96" r="15" fill="#4CAF50"/>
+            <circle cx="93" cy="96" r="8" fill="#1B1B1B"/>
+            <circle cx="90" cy="93" r="2.5" fill="#FFFFFF"/>
+            <circle cx="148" cy="96" r="15" fill="#4CAF50"/>
+            <circle cx="147" cy="96" r="8" fill="#1B1B1B"/>
+            <circle cx="144" cy="93" r="2.5" fill="#FFFFFF"/>
+            <!-- 微笑小嘴 -->
+            <path d="M104 112 Q120 122 136 112 Q120 116 104 112 Z" fill="#C8963E"/>
+          </svg>`
+      },
+      {
+        id: 1,
+        tabName: '幼幼型態',
+        title: '階段二：幼幼型態',
+        subtitle: '張開雙手雙腳的活力小星星',
+        tag: '活潑好動・五角萌軀',
+        latin: 'Naiwa juvenis',
+        size: '約 22–28 cm',
+        image: './stage2.jpg',
+        easterEggs: [
+          '呀比！張開雙手給你一個大擁抱！',
+          '蹦蹦跳跳～最喜歡在草地上打滾！',
+          '笑口常開，心情好到飛起來啦！'
+        ],
+        morphology: '體色轉為輕盈柔和的淡奶油黃，原本圓滾的蛋形身軀向外延伸出短小圓潤的雙手與雙腳，整體輪廓宛如一顆軟綿綿的五角小星星。雙眼依舊保持著靈動大圓眼，嘴角則大幅張開成無憂無慮的燦爛微笑。',
+        behavior: '好奇心極為旺盛，是四個階段中最活潑好動的時期。牠們經常高舉雙手、單腳雀躍地探索林間小徑，遇到同類時會透過互相擊掌與搖擺身體來打招呼，充滿源源不絕的朝氣。',
+        evolution: '隨著四肢骨骼與肌肉軟組織初步發育完成，幼幼型態的奶蛙擺脫了被動滾動的限制，獲得了自主跳躍與奔跑的能力。大量的日常活動促使牠們食慾大增，為下一階段的體型躍升奠定基礎。',
+        svgFallback: `
+          <svg viewBox="0 0 240 240" class="w-full h-full">
+            <defs>
+              <radialGradient id="babyGrad" cx="45%" cy="35%" r="70%">
+                <stop offset="0%" stop-color="#FFF59D"/>
+                <stop offset="70%" stop-color="#FFE082"/>
+                <stop offset="100%" stop-color="#FFD54F"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="112" cy="212" rx="46" ry="9" fill="rgba(0,0,0,0.08)"/>
+            <!-- 星形身軀與四肢 -->
+            <path d="M115 40 C145 40, 158 68, 162 94 C185 88, 210 86, 214 102 C218 118, 192 132, 178 140 C186 165, 192 186, 172 194 C154 200, 144 176, 130 182 C126 202, 124 212, 106 212 C88 212, 88 196, 86 178 C64 168, 56 146, 56 136 C36 134, 22 126, 24 112 C26 98, 48 96, 66 96 C70 68, 85 40, 115 40 Z" fill="url(#babyGrad)"/>
+            <!-- 綠眼睛 -->
+            <circle cx="94" cy="82" r="14" fill="#66BB6A"/>
+            <circle cx="95" cy="82" r="8" fill="#1B1B1B"/>
+            <circle cx="92" cy="79" r="2.5" fill="#FFFFFF"/>
+            <circle cx="140" cy="80" r="14" fill="#66BB6A"/>
+            <circle cx="139" cy="80" r="8" fill="#1B1B1B"/>
+            <circle cx="136" cy="77" r="2.5" fill="#FFFFFF"/>
+            <!-- 開心大笑 -->
+            <path d="M98 100 Q118 124 138 98 Q118 104 98 100 Z" fill="#8D493A"/>
+          </svg>`
+      },
+      {
+        id: 2,
+        tabName: '巨獸型態',
+        title: '階段三：巨獸型態',
+        subtitle: '挺著圓滾肚皮的沉穩守護者',
+        tag: '穩重站立・深褐四肢末梢',
+        latin: 'Naiwa gigas',
+        size: '約 65–80 cm',
+        image: './stage3.jpg',
+        easterEggs: [
+          '咚咚！拍拍圓滾滾的Q彈大肚皮～',
+          '雙手護肚，展現森林長老的從容氣場！',
+          '深褐色的手腳抓地力可是滿分喔！'
+        ],
+        morphology: '體型大幅膨脹並挺直站立，挺著一顆極具份量感的淡黃色圓滾大肚子，雙手自然環抱於腹前。最顯著的特徵在於四肢末端漸層轉化為沉穩的深褐色，並分化出厚實的三趾掌墊，頭部比例相對精巧，神情淡定從容。',
+        behavior: '一改幼年時期的躁動，巨獸型態展現出泰山崩於前而色不變的穩重氣質。牠們喜歡雙手輕捧著大肚皮靜靜佇立在林間空地，擔任族群中的守護者，對弱小生物展現出極高的包容力。',
+        evolution: '為了適應直立行走並支撐日漸豐腴的身軀，奶蛙將大量角質蛋白集中輸送至手掌與腳掌末端，形成耐磨防滑的深褐色保護層，同時腹部進化出高彈性的儲能氣囊，使體態變得厚實而安定。',
+        svgFallback: `
+          <svg viewBox="0 0 240 240" class="w-full h-full">
+            <defs>
+              <linearGradient id="giantBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFD54F"/>
+                <stop offset="100%" stop-color="#F9A825"/>
+              </linearGradient>
+              <linearGradient id="brownLimb" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#FBC02D"/>
+                <stop offset="100%" stop-color="#5D4037"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="120" cy="218" rx="64" ry="10" fill="rgba(0,0,0,0.1)"/>
+            <!-- 雙腿 -->
+            <path d="M84 162 L92 204 L72 212 L106 214 L108 166 Z" fill="url(#brownLimb)"/>
+            <path d="M132 164 L142 206 L124 216 L160 216 L154 162 Z" fill="url(#brownLimb)"/>
+            <!-- 主身軀 -->
+            <path d="M112 24 C144 24, 178 86, 178 136 C178 176, 150 184, 118 184 C84 184, 62 168, 62 132 C62 92, 86 58, 92 42 C94 30, 100 24, 112 24 Z" fill="url(#giantBody)"/>
+            <!-- 淡黃大肚皮 -->
+            <ellipse cx="104" cy="128" rx="40" ry="44" fill="#FFE082" opacity="0.85"/>
+            <!-- 護肚手臂 -->
+            <path d="M132 76 C144 96, 128 118, 92 118" stroke="#5D4037" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <path d="M132 76 C144 96, 130 116, 102 118" stroke="#FBC02D" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <!-- 綠眼睛與淡定嘴 -->
+            <circle cx="108" cy="40" r="10" fill="#66BB6A"/>
+            <circle cx="109" cy="40" r="5.5" fill="#1B1B1B"/>
+            <line x1="86" y1="50" x2="100" y2="50" stroke="#6D4C41" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>`
+      },
+      {
+        id: 3,
+        tabName: '螺旋型態',
+        title: '階段四：螺旋型態',
+        subtitle: '層層盤繞如霜淇淋的終極軟萌',
+        tag: '終極擬態・黃金螺旋',
+        latin: 'Naiwa spiralis',
+        size: '約 35–42 cm',
+        image: './stage4.jpg',
+        easterEggs: [
+          '轉圈圈～是香草卡士達口味的螺旋喔！',
+          '頂端的小尖角是接收幸福訊號的天線！',
+          '層層疊疊，防禦力與可愛度雙雙破表！'
+        ],
+        morphology: '打破常規兩棲類的身體結構，全身化為由下往上、由寬漸窄的四層圓潤螺旋堆疊造型，宛如一支完美擠出的金黃色香草霜淇淋。頂端帶著俏皮的微彎尖角，一對森林綠大眼與微笑小嘴則優雅地嵌在最上層的螺旋圈中。',
+        behavior: '屬於極為罕見的休眠與冥想型態。進入此階段的奶蛙幾乎不再移動，而是以完美的黃金螺旋姿態靜駐於花叢或岩石上，透過旋轉微調每一層的受光面積，散發出令人感到無比療癒的靜謐氣場。',
+        evolution: '當巨獸型態的奶蛙在季節交替、體內能量達到飽和巔峰時，會啟動罕見的「軟骨回流重塑」，將四肢與軀幹收束盤繞成力學最穩固的螺旋塔結構，藉此抵禦寒風並進入深層的幸福蓄能循環。',
+        svgFallback: `
+          <svg viewBox="0 0 240 240" class="w-full h-full">
+            <defs>
+              <linearGradient id="swirlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#FFEE58"/>
+                <stop offset="50%" stop-color="#FFD54F"/>
+                <stop offset="100%" stop-color="#FBC02D"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="120" cy="214" rx="74" ry="10" fill="rgba(0,0,0,0.09)"/>
+            <!-- 由下而上四層螺旋 -->
+            <rect x="42" y="156" width="156" height="48" rx="24" fill="url(#swirlGrad)"/>
+            <rect x="54" y="118" width="132" height="44" rx="22" fill="url(#swirlGrad)"/>
+            <rect x="68" y="84" width="104" height="40" rx="20" fill="url(#swirlGrad)"/>
+            <path d="M84 88 C84 62, 104 54, 110 36 C112 28, 124 28, 122 40 C120 52, 156 58, 156 88 Z" fill="url(#swirlGrad)"/>
+            <!-- 綠眼睛 -->
+            <circle cx="102" cy="70" r="10" fill="#66BB6A"/>
+            <circle cx="103" cy="70" r="5.5" fill="#1B1B1B"/>
+            <circle cx="100" cy="68" r="1.8" fill="#FFFFFF"/>
+            <circle cx="132" cy="70" r="10" fill="#66BB6A"/>
+            <circle cx="131" cy="70" r="5.5" fill="#1B1B1B"/>
+            <circle cx="128" cy="68" r="1.8" fill="#FFFFFF"/>
+            <!-- 微笑 -->
+            <path d="M106 82 Q117 87 128 82" stroke="#8D6E63" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          </svg>`
+      }
+    ];
+
+    // 狀態管理
+    let currentStage = 0;
+    let eggToastTimer = null;
+
+    // DOM 元素參照
+    const tabIndicator = document.getElementById('tab-indicator');
+    const stageTabs = document.querySelectorAll('.stage-tab');
+    const paginationDots = document.querySelectorAll('#pagination-dots button');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    const stageCounterBadge = document.getElementById('stage-counter-badge');
+    const stageTag = document.getElementById('stage-tag');
+    const stageLatin = document.getElementById('stage-latin');
+    const stageTitle = document.getElementById('stage-title');
+    const stageSubtitle = document.getElementById('stage-subtitle');
+    const stageSize = document.getElementById('stage-size');
+    const descMorphology = document.getElementById('desc-morphology');
+    const descBehavior = document.getElementById('desc-behavior');
+    const descEvolution = document.getElementById('desc-evolution');
+
+    const frogInteractiveBox = document.getElementById('frog-interactive-box');
+    const frogImage = document.getElementById('frog-image');
+    const frogSvgFallback = document.getElementById('frog-svg-fallback');
+    const imageSkeleton = document.getElementById('image-skeleton');
+    const easterEggToast = document.getElementById('easter-egg-toast');
+    const infoCard = document.getElementById('info-card');
+
+    // 切換階段核心渲染函式
+    function renderStage(index) {
+      if (index < 0 || index >= FROG_STAGES.length) return;
+      currentStage = index;
+      const data = FROG_STAGES[index];
+
+      // 1. 更新頂部 Segmented Control 膠囊滑動與文字顏色
+      tabIndicator.style.transform = `translateX(${index * 100}%)`;
+      stageTabs.forEach((tab, idx) => {
+        if (idx === index) {
+          tab.classList.remove('text-stone-500', 'dark:text-stone-400');
+          tab.classList.add('text-stone-900', 'dark:text-white');
+        } else {
+          tab.classList.add('text-stone-500', 'dark:text-stone-400');
+          tab.classList.remove('text-stone-900', 'dark:text-white');
+        }
+      });
+
+      // 2. 更新底部圓點指示器與按鈕狀態
+      paginationDots.forEach((dot, idx) => {
+        if (idx === index) {
+          dot.className = 'h-2.5 w-6 rounded-full bg-forest-500 transition-all duration-300';
+        } else {
+          dot.className = 'h-2.5 w-2.5 rounded-full bg-amber-300 dark:bg-stone-700 transition-all duration-300';
+        }
+      });
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === FROG_STAGES.length - 1;
+
+      // 3. 更新圖片與 Skeleton 載入狀態
+      imageSkeleton.classList.remove('hidden');
+      frogImage.classList.add('opacity-0');
+      frogImage.classList.remove('hidden');
+      frogSvgFallback.classList.add('hidden');
+      frogSvgFallback.classList.remove('flex');
+
+      frogImage.src = data.image;
+      frogImage.alt = data.title;
+
+      frogImage.onload = () => {
+        imageSkeleton.classList.add('hidden');
+        frogImage.classList.remove('opacity-0');
+      };
+
+      // 若實體圖片尚未放入資料夾，無縫切換至高質感 SVG 向量插畫
+      frogImage.onerror = () => {
+        imageSkeleton.classList.add('hidden');
+        frogImage.classList.add('hidden');
+        frogSvgFallback.innerHTML = data.svgFallback;
+        frogSvgFallback.classList.remove('hidden');
+        frogSvgFallback.classList.add('flex');
+      };
+
+      // 4. 更新文案並觸發平滑淡入動畫
+      stageCounterBadge.textContent = `STAGE 0${index + 1} / 04`;
+      stageTag.textContent = data.tag;
+      stageLatin.textContent = data.latin;
+      stageTitle.textContent = data.title;
+      stageSubtitle.textContent = data.subtitle;
+      stageSize.textContent = data.size;
+      descMorphology.textContent = data.morphology;
+      descBehavior.textContent = data.behavior;
+      descEvolution.textContent = data.evolution;
+
+      // 重新觸發文字卡片進場動畫
+      infoCard.classList.remove('animate-stage-enter');
+      void infoCard.offsetWidth; // 強制 reflow
+      infoCard.classList.add('animate-stage-enter');
+    }
+
+    // 點擊奶蛙觸發 Q 彈果凍動畫與小彩蛋
+    frogInteractiveBox.addEventListener('click', () => {
+      frogInteractiveBox.classList.remove('animate-jelly');
+      void frogInteractiveBox.offsetWidth;
+      frogInteractiveBox.classList.add('animate-jelly');
+
+      const eggs = FROG_STAGES[currentStage].easterEggs;
+      const randomEgg = eggs[Math.floor(Math.random() * eggs.length)];
+      easterEggToast.textContent = randomEgg;
+      easterEggToast.classList.remove('opacity-0', 'scale-90');
+      easterEggToast.classList.add('opacity-100', 'scale-100');
+
+      clearTimeout(eggToastTimer);
+      eggToastTimer = setTimeout(() => {
+        easterEggToast.classList.add('opacity-0', 'scale-90');
+        easterEggToast.classList.remove('opacity-100', 'scale-100');
+      }, 1800);
+    });
+
+    // 分頁標籤與底部按鈕事件
+    stageTabs.forEach(tab => {
+      tab.addEventListener('click', () => renderStage(Number(tab.dataset.stage)));
+    });
+    paginationDots.forEach(dot => {
+      dot.addEventListener('click', () => renderStage(Number(dot.dataset.dot)));
+    });
+    prevBtn.addEventListener('click', () => renderStage(currentStage - 1));
+    nextBtn.addEventListener('click', () => renderStage(currentStage + 1));
+
+    // 原生左右滑動手勢 (Touch Swipe) 支援
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const swipeArea = document.getElementById('swipe-area');
+
+    swipeArea.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    swipeArea.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].screenX;
+      const touchEndY = e.changedTouches[0].screenY;
+      const diffX = touchEndX - touchStartX;
+      const diffY = touchEndY - touchStartY;
+
+      // 確保水平滑動距離大於垂直滑動，且超過 45px 門檻
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 45) {
+        if (diffX < 0 && currentStage < FROG_STAGES.length - 1) {
+          renderStage(currentStage + 1); // 向左滑 -> 下一階段
+        } else if (diffX > 0 && currentStage > 0) {
+          renderStage(currentStage - 1); // 向右滑 -> 上一階段
+        }
+      }
+    }, { passive: true });
+
+    // 鍵盤左右鍵支援 (桌面端預覽便利性)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') renderStage(currentStage + 1);
+      if (e.key === 'ArrowLeft') renderStage(currentStage - 1);
+    });
+
+    // 深色模式切換 (支援自動偵測與手動記憶)
+    const htmlEl = document.documentElement;
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const themeColorMeta = document.getElementById('theme-color-meta');
+
+    function applyTheme(isDark) {
+      if (isDark) {
+        htmlEl.classList.add('dark');
+        themeColorMeta.setAttribute('content', '#120F0C');
+      } else {
+        htmlEl.classList.remove('dark');
+        themeColorMeta.setAttribute('content', '#FFF8E1');
+      }
+    }
+
+    const savedTheme = localStorage.getItem('naiwa-theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(savedTheme ? savedTheme === 'dark' : systemPrefersDark);
+
+    themeToggleBtn.addEventListener('click', () => {
+      const nextDark = !htmlEl.classList.contains('dark');
+      applyTheme(nextDark);
+      localStorage.setItem('naiwa-theme', nextDark ? 'dark' : 'light');
+    });
+
+    // 關於世界觀彈窗控制
+    const aboutModal = document.getElementById('about-modal');
+    const infoModalBtn = document.getElementById('info-modal-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const confirmModalBtn = document.getElementById('confirm-modal-btn');
+
+    function toggleModal(show) {
+      if (show) {
+        aboutModal.classList.remove('hidden');
+        aboutModal.classList.add('flex');
+      } else {
+        aboutModal.classList.add('hidden');
+        aboutModal.classList.remove('flex');
+      }
+    }
+    infoModalBtn.addEventListener('click', () => toggleModal(true));
+    closeModalBtn.addEventListener('click', () => toggleModal(false));
+    confirmModalBtn.addEventListener('click', () => toggleModal(false));
+    aboutModal.addEventListener('click', (e) => {
+      if (e.target === aboutModal) toggleModal(false);
+    });
+
+    // PWA 安裝引導橫幅與 Service Worker 註冊
+    let deferredPrompt;
+    const installBanner = document.getElementById('pwa-install-banner');
+    const installBtn = document.getElementById('pwa-install-btn');
+    const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBanner.classList.remove('hidden');
+      installBanner.classList.add('flex');
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBanner.classList.add('hidden');
+      installBanner.classList.remove('flex');
+    });
+
+    dismissBtn.addEventListener('click', () => {
+      installBanner.classList.add('hidden');
+      installBanner.classList.remove('flex');
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch((err) => {
+          console.warn('ServiceWorker registration failed:', err);
+        });
+      });
+    }
+
+    // 初始化渲染第一階段
+    renderStage(0);
+  </script>
+</body>
+</html>
